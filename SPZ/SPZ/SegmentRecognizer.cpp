@@ -16,27 +16,28 @@ char SegmentRecognizer::recognize(const Segment& segment)
 
 	if(this->mqu() && !this->mm() && !this->mqd() && this->ru() && !this->mu() && this->rd()) //lu,md
 		return '1';
-	if(!this->mqu() && !this->mm() && !this->mqd() && this->ru() && this->lu() && this->md() && this->mu() &this->rd())
-			return '0';
-	if(!this->mqu() && !this->mm() && this->mqd() && !this->rd())
-		if(this->ru() && !this->lu() && !this->md() && this->mu())
+	if(!this->mqu() && !this->mm() && !this->mqd() && this->ru() && this->lu() && this->mu()) //rd
+
+		return '0';
+	if(this->mqd() && !this->rd())
+		if(this->ru() && !this->lu() && !this->md() && this->mu()) //mqu,mm
 			return '7';
-		else if(this->ru() && this->md() && !this->lu() && this->mu())
+		else if(!this->mqu() && this->ru() && this->md() && !this->lu() && this->mu())
 			return '2';
-	if(!this->mqu() && this->mm() && this->mqd() && this->ru() && this->lu() && !this->md() && this->mu() && !this->rd())
+	if(!this->mqu() && this->mm() && this->mqd() && this->ru() && this->lu() && !this->md() && this->mu())
 			return '9';
 
-	if(this->mm() && this->mqd() && this->ru() && this->lu() && this->mqu() && !this->mu())//md
+	if(this->mm() && this->mqd() && this->ru() && !this->mu() && this->ld() && !this->lu())//md lu mqu
 			return '4';
-	if(this->mm() && !this->mqd() && this->md() && this->rd())
-		if(!this->mu() && this->mqu()) //ru,lu
+	if(this->mm() && !this->mqd() && this->md())
+		if(!this->mu() && this->mqu() && this->ld()) //ru,lu
 			return '6';		
-	    else if(this->mu() && !this->lu())//mqu,ru
+	    else if(this->mu() && !this->lu() && !this->ld() && this->rd())//mqu,ru
 			return '3';
-	if(!this->mqu() && this->mm() && !this->mqd() && this->mu() && this->md() && this->rd())
+	if(/*!this->mqu() &&*/ this->mm() && this->mu() && this->md())
 		if(!this->ru() && this->lu())
 			return '5';
-	    else if(this->ru() && this->lu())
+	    else if(this->ru() && this->lu() && !this->mqd())
 			return '8';
 		
 
@@ -49,8 +50,8 @@ bool SegmentRecognizer::lu()
 	if(this->source.at<uchar>(this->segment.y + this->segment.height / 3,this->segment.x) < 255 ||
 		this->source.at<uchar>(this->segment.y + this->segment.height / 3,this->segment.x + 1) < 255 ||
 		this->source.at<uchar>(this->segment.y + this->segment.height / 3,this->segment.x + 2) < 255 ||
-		this->source.at<uchar>(this->segment.y + this->segment.height / 3,this->segment.x + 3) < 255 ||
-		this->source.at<uchar>(this->segment.y + this->segment.height / 3,this->segment.x + 4) < 255)
+		this->source.at<uchar>(this->segment.y + this->segment.height / 3,this->segment.x + 3) < 255 /*||
+		this->source.at<uchar>(this->segment.y + this->segment.height / 3,this->segment.x + 4) < 255*/)
 		return true;
 	return false;
 }
@@ -73,7 +74,9 @@ bool SegmentRecognizer::md()
 }
 bool SegmentRecognizer::mm()
 {
-	if(this->source.at<uchar>(this->segment.y + this->segment.height / 2,this->segment.x + this->segment.width / 2) < 255 ||
+	if(this->source.at<uchar>(this->segment.y + this->segment.height / 2,this->segment.x + this->segment.width / 2) < 255 ||/*
+		this->source.at<uchar>(this->segment.y + this->segment.height / 2,this->segment.x + this->segment.width / 2 - 1) < 255 ||
+		this->source.at<uchar>(this->segment.y + this->segment.height / 2,this->segment.x + this->segment.width / 2 + 1) < 255 ||*/
 		this->source.at<uchar>(this->segment.y + this->segment.height / 2 - 1,this->segment.x + this->segment.width / 2) < 255 ||
 		this->source.at<uchar>(this->segment.y + this->segment.height / 2 - 2,this->segment.x + this->segment.width / 2) < 255 ||
 		this->source.at<uchar>(this->segment.y + this->segment.height / 2 - 3,this->segment.x + this->segment.width / 2) < 255 ||
@@ -109,7 +112,18 @@ bool SegmentRecognizer::mu()
 bool SegmentRecognizer::rd()
 {
 	if(this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x + this->segment.width) < 255  ||
-		this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x + this->segment.width - 1) < 255) 
+		this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x + this->segment.width - 1) < 255||
+		this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x + this->segment.width - 2) < 255/*||
+		this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x + this->segment.width - 3) < 255*/) 
+		return true;
+	return false;
+}
+bool SegmentRecognizer::ld()
+{
+	if(this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x) < 255  ||
+		this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x + 1) < 255||
+		this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x + 2) < 255/*||
+		this->source.at<uchar>(this->segment.y + 2 * this->segment.height / 3,this->segment.x + 3) < 255*/) 
 		return true;
 	return false;
 }

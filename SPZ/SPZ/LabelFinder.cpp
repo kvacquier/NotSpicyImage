@@ -14,9 +14,6 @@ LabelFinder::LabelFinder(cv::Mat &image)
 	this->grayScale(image,this->source);
 	this->temp = this->source.clone();
 	this->temp2 = this->source.clone();
-
-	this->minlength = temp.cols / MINWIDTH;		//minimal dimensions of plate
-	this->minheight = temp.rows / MINHEIGHT;
 	
 	int tfilter[3][3] = {{1,0,-1},			//edge detect matrix
 						{2,0,-2},
@@ -74,7 +71,7 @@ bool LabelFinder::dark(const cv::Mat &image)
 	int intensity = 0;
 	for(int i = 0; i < 5; i++)
 		for(int j = 0; j < 5; j++)
-			intensity += image.at<uchar>(i,j + 10);
+			intensity += image.at<uchar>(i+5,j + 15);
 	if((intensity / 25) < INTENSITY)
 		return true;
 
@@ -153,6 +150,12 @@ int colory = 0;
 }
 bool LabelFinder::findRect(const cv::Mat& src)
 {
+	
+	this->minlength = src.cols / MINWIDTH;		//minimal dimensions of plate
+	this->minheight = src.rows / MINHEIGHT;
+
+	PointInt p;
+
 	int counter = 0;
 	int i = 1,j = 3;
 	int k;
@@ -184,13 +187,14 @@ bool LabelFinder::findRect(const cv::Mat& src)
 							src.at<uchar>(j + 1,k) == 255||
 							src.at<uchar>(j + 2,k) == 255)
 
-							if((k-i) > 10 &&							//check vertical line if earlier than end of horizontal
-								src.at<uchar>(j - 3,k) == 255&&
-								src.at<uchar>(j - 4,k) == 255&&
-								src.at<uchar>(j - 5,k) == 255)
+							//if((k-i) > 10 &&							//check vertical line if earlier than end of horizontal
+							//	src.at<uchar>(j - 3,k) == 255&&
+							//	src.at<uchar>(j - 4,k) == 255&&
+							//	src.at<uchar>(j - 5,k) == 255)
 
-								break;
-							else k++;
+							//	break;
+							//else 
+							k++;
 											
 						else break;
 
@@ -198,8 +202,8 @@ bool LabelFinder::findRect(const cv::Mat& src)
 					{
 
 						found = true;
-						this->rectcoor.x= i;
-						this->rectcoor.y = j - counter;
+						p.x = i;
+						p.y = j - counter;
 						this->rectwidth = k - i - 1;
 						this->rectheight = counter;
 
@@ -212,91 +216,102 @@ bool LabelFinder::findRect(const cv::Mat& src)
 			j++;
 		}
 		i++;
+		counter = 0;
 		j = 3;
 	}
-
-	counter = this->rectheight / RECTLINEY + 1;						
-	j = this->rectcoor.x - 1;
-	while(counter > this->rectheight / RECTLINEY)								//cutting borders - left
+	if(found)
 	{
-		j++;
-		counter = 0;
-		for(int i = 0; i < this->rectheight; i++)
-			if(src.at<uchar>(i + this->rectcoor.y,j) == 255)
+		counter = this->rectheight / RECTLINEY + 1;						
+		j = p.x - 1;
+		while(counter > this->rectheight / RECTLINEY)								//cutting borders - left
+		{
+			j++;
+			counter = 0;
+			for(int i = 0; i < this->rectheight; i++)
+				if(src.at<uchar>(i + p.y,j) == 255)
 			
-				counter++;
+					counter++;
 				
 
-	}
-	if (j > this->rectcoor.x)
-	{		
-		this->rectwidth -= j - this->rectcoor.x;
-		this->rectcoor.x = j;
-	}
+		}
+		if (j > p.x)
+		{		
+			this->rectwidth -= j - p.x;
+			p.x = j;
+		}
 
-	counter = this->rectheight / RECTLINEY + 1;						
-	j = this->rectcoor.x + this->rectwidth + 1;
-	while(counter > this->rectheight / RECTLINEY)								//cutting borders - right
-	{
-		j--;
-		counter = 0;
-		for(int i = 0; i < this->rectheight; i++)
-			if(src.at<uchar>(i + this->rectcoor.y,j) == 255)
+		counter = this->rectheight / RECTLINEY + 1;						
+		j = p.x + this->rectwidth + 1;
+		while(counter > this->rectheight / RECTLINEY)								//cutting borders - right
+		{
+			j--;
+			counter = 0;
+			for(int i = 0; i < this->rectheight; i++)
+				if(src.at<uchar>(i + p.y,j) == 255)
 			
-				counter++;
+					counter++;
 				
 
-	}
-	if (j < (this->rectcoor.x + this->rectwidth))
-	{
-		this->rectwidth -= (this->rectcoor.x + this->rectwidth) - j;
-	}
+		}
+		if (j < (p.x + this->rectwidth))
+		{
+			this->rectwidth -= (p.x + this->rectwidth) - j;
+		}
 
-	counter = this->rectwidth / RECTLINEX + 1;						
-	j = this->rectcoor.y - 1;
-	while(counter > this->rectwidth / RECTLINEX)								//cutting borders - top
-	{
-		j++;
-		counter = 0;
-		for(int i = 0; i < this->rectwidth; i++)
-			if(src.at<uchar>(j,i + this->rectcoor.x) == 255)
+		counter = this->rectwidth / RECTLINEX + 1;						
+		j = p.y - 1;
+		while(counter > this->rectwidth / RECTLINEX)								//cutting borders - top
+		{
+			j++;
+			counter = 0;
+			for(int i = 0; i < this->rectwidth; i++)
+				if(src.at<uchar>(j,i + p.x) == 255 && src.at<uchar>(j,i + p.x - 1) == 255)
 			
-				counter++;
+					counter++;
+				else
+					counter = 0;
 				
 
-	}
-	if (j > this->rectcoor.y)
-	{		
-		this->rectheight -=  j - this->rectcoor.y;
-		this->rectcoor.y =  j;
-	}
+		}
+		if (j > p.y)
+		{		
+			this->rectheight -=  j - p.y;
+			p.y =  j;
+		}
 
 
-	counter = this->rectwidth / RECTLINEX + 1;						
-	j = this->rectcoor.y + this->rectheight + 1;
-	while(counter > this->rectwidth / RECTLINEX)								//cutting borders - bottom
-	{
-		j--;
-		counter = 0;
-		for(int i = 0; i < this->rectwidth; i++)
-			if(src.at<uchar>(j,i + this->rectcoor.x) == 255)
+		counter = this->rectwidth / RECTLINEX + 1;						
+		j = p.y + this->rectheight + 1;
+		while(counter > this->rectwidth / RECTLINEX)								//cutting borders - bottom
+		{
+			j--;
+			counter = 0;
+			for(int i = 1; i < this->rectwidth; i++)
+				if(src.at<uchar>(j,i + p.x) == 255 && src.at<uchar>(j,i + p.x - 1) == 255)
 			
-				counter++;
+					counter++;
+				else
+					counter = 0;
 				
 
+		}
+		if (j < (p.y + this->rectheight))
+		{		
+			this->rectheight -=  (p.y + this->rectheight) - j;
+		}
+
+		this->rectcoor.x += p.x;
+		this->rectcoor.y += p.y;
+
+
 	}
-	if (j < (this->rectcoor.y + this->rectheight))
-	{		
-		this->rectheight -=  (this->rectcoor.y + this->rectheight) - j;
-	}
-
-
-
-	return found;		
+		return found;		
 }
 void LabelFinder::cut(PointInt p,unsigned int w,unsigned int h)
 {
+	this->outimg.empty();
 	this->outimg.create(h,w,CV_8UC1);
+	this->tempout.create(h,w,CV_8UC1);
 
 	for(size_t i = 0; i < outimg.rows; i++)
 		for(size_t j = 0; j < outimg.cols; j++)
@@ -306,17 +321,20 @@ bool LabelFinder::findPlate(unsigned int edge)
 {
 	this->edges(this->temp,this->temp2,edge);
 	this->show(this->temp);
-	this->findRect2(this->temp,this->temp2);
-	this->show(this->temp2);
+	if(this->findRect2(this->temp,this->temp2))
+	{
+	//this->show(this->temp2);
 	//this->show(this->temp);
 	/*if (!this->findRect(this->temp))
-		return false;
-	this->cut(this->rectcoor,this->rectwidth,this->rectheight);
-	this->show(this->outimg);
-	this->histEquation(this->outimg);
-	this->show(this->outimg);
-	this->binarize(this->outimg,BINARIZE);
-	this->show(this->outimg);*/
+		return false;*/
+		//this->show(this->source);
+	//this->cut(this->rectcoor,this->rectwidth,this->rectheight);
+	//this->show(this->outimg);
+	//this->histEquation(this->outimg);
+	//this->show(this->outimg);
+	//this->binarize(this->outimg,BINARIZE);
+	//this->show(this->outimg);
+	}
 
 	return true;
 }
@@ -375,13 +393,15 @@ bool LabelFinder::findRect2(const cv::Mat& src, cv::Mat& tmp)
 			if(tmp.at<uchar>(i,j) > max)
 				max = (tmp.at<uchar>(i,j) > 255) ? 255 : tmp.at<uchar>(i,j);
 		}
-	show(tmp);	
-		this->histEquation(tmp);
-	for(int i = 1; i < tmp.rows; i++)
+		
+		
+	this->histEquation(tmp);
+	
+	for(int i = 1; i < tmp.rows; i++) //filter
 		for(int j = 1; j < tmp.cols; j++)
 			if(static_cast<int>(tmp.at<uchar>(i,j)) < 253)
 				tmp.at<uchar>(i,j) = 0;
-   show(tmp);
+   
 	sum = 0;
 	max = (tmp.rows / 10)*(tmp.cols / 8);
 	for(int i = 0; i < 10; i++)
@@ -403,6 +423,101 @@ bool LabelFinder::findRect2(const cv::Mat& src, cv::Mat& tmp)
 			sum = 0;
 
 		}
-			
+		this->show(this->temp2);
+		Stack stack;
+		int prev = 0;
+		bool end = false;
+
+		for(int i = 1; i < tmp.rows; i++)
+		{
+			for(int j = 1; j < tmp.cols; j++)
+				if(tmp.at<uchar>(i,j-1) == 0 && tmp.at<uchar>(i,j) == 255)
+				{
+					if(prev != j)
+					{
+						stack.push(PointInt(j,i));
+						prev = j;
+					}
+					end = false;
+				}
+				if(end)
+					prev = 0;
+				end = true;
+		}
+		while(!stack.isEmpty())
+		{
+			this->rectcoor = stack.pop();
+			if(this->rectcoor.x - 50 > 0)
+				this->rectcoor.x -= 50;
+			if(this->rectcoor.y - 50 > 0)
+				this->rectcoor.y -= 50;
+			if(this->rectcoor.x + 300 <tmp.cols)
+				this->rectwidth = 300;
+			else
+				this->rectwidth = tmp.cols - this->rectcoor.x;
+			if(this->rectcoor.y + 120 < tmp.rows)
+				this->rectheight = 120;
+			else
+				this->rectheight = tmp.rows - this->rectcoor.y;
+			this->cut(this->rectcoor,this->rectwidth,this->rectheight);
+			this->edges(this->outimg,this->tempout,130);
+			this->show(this->outimg);
+				if(this->findRect(this->outimg))
+				{
+					this->cut(this->rectcoor,this->rectwidth,this->rectheight);
+					this->show(this->outimg);
+					this->histEquation(this->outimg);
+					this->show(this->outimg);
+					this->binarize(this->outimg,BINARIZE);
+					this->show(this->outimg);
+					int recognized = this->trySegments();
+					if(recognized > 5)
+						return true;
+					else if (recognized > 1)
+					{
+						std::cout << "Incorrect detection! Second try" << std::endl;
+						this->rectcoor.y -= 15;
+						this->rectwidth += 20;
+						this->rectheight += 15;
+						this->cut(this->rectcoor,this->rectwidth,this->rectheight);
+						this->show(this->outimg);
+						this->histEquation(this->outimg);
+						this->show(this->outimg);
+						this->binarize(this->outimg,BINARIZE+5);
+						this->show(this->outimg);
+						if(this->trySegments() > 5)
+							return true;
+					}
+
+				}
+		}
 	return false;
 }
+int LabelFinder::trySegments()
+{
+	LabelSegmenter segments(this->outimg);
+		int count = segments.findSegments();
+		int recognized = 0;
+		std::string plate;
+		if (count > 6)	//7 minimal count of segments 
+		{
+			std::cout << count << " segments found" << std::endl;
+			//segments.listSegments();
+			SegmentRecognizer recognizer(this->outimg);
+
+			for(int i = 1; i < count + 1; i++)
+			{
+				plate += recognizer.recognize(segments.getSegment(i));
+				if(plate.back() != ' ')
+					recognized++;
+				else
+					if(plate.size() != 3)
+						plate.pop_back();
+					
+				
+			}
+			std::cout << plate << std::endl;
+		}
+
+			return recognized;
+	}

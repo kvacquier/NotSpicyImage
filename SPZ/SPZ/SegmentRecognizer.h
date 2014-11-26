@@ -18,6 +18,7 @@ class SegmentRecognizer
 	bool md();
 	bool mu();
 	bool rd();
+	bool ld();
 public:
 	SegmentRecognizer(const cv::Mat& image);
 	~SegmentRecognizer();

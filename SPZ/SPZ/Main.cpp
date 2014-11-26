@@ -3,8 +3,7 @@
 #include <iostream>
 #include <string>
 #include "LabelFinder.h"
-#include "LabelSegmenter.h"
-#include "SegmentRecognizer.h"
+
 
 int main( int argc, char** argv )
 {
@@ -33,30 +32,10 @@ int main( int argc, char** argv )
 	LabelFinder label(image);
 	
 	if (label.findPlate(400))	//400 edge intensity
-	{
+	
 		std::cout << "Licence plate detected" << std::endl;
 		//label.rectPos();
 
-		LabelSegmenter segments(label.output());
-		int count = segments.findSegments();
-		std::string plate;
-		if (count > 6)	//7 minimal count of segments 
-		{
-			std::cout << count << " segments found" << std::endl;
-			//segments.listSegments();
-			SegmentRecognizer recognizer(label.output());
-
-			for(int i = 1; i < count + 1; i++)
-			{
-				plate += recognizer.recognize(segments.getSegment(i));
-			}
-			std::cout << plate << std::endl;
-
-		}
-
-		else
-			std::cout << "Segments not found" << std::endl;
-	}
 	else
 		std::cout << "Licence plate not detected" << std::endl;
 	

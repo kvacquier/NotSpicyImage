@@ -87,8 +87,11 @@ int LabelSegmenter::findSegments()
 	}
 	//std::cout << segments.size() << std::endl;
 	this->noiseFilter(NOISEFILTER);
+	for(std::vector<Segment>::iterator it = segments.begin();it != segments.end();++it)
+		cv::rectangle(this->source,cv::Point(it->x - 1,it->y - 1),cv::Point(it->x + it->width + 1,it->y + it->height + 1),cv::Scalar(0,0,255));
 	//std::cout << "Noise deleted" << std::endl;
 	//std::cout << segments.size() << std::endl;
+	this->show();
 	std::sort(this->segments.begin(),this->segments.end(),sortSegments);
 	return this->segments.size();
 	

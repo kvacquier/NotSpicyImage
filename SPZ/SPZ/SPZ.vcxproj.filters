@@ -32,6 +32,9 @@
     <ClCompile Include="SegmentRecognizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="SPZ.props" />

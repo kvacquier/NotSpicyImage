@@ -7,7 +7,7 @@
 #include "Segment.h"
 
 #define NOISEFILTER 50 //size of filtered grain width*height
-#define LINEREMAINING 3 //line filter if line width is longer than plate width:x
+#define LINEREMAINING 5 //line filter if line width is longer than plate width:x
 
 bool sortSegments(const Segment& lhs,const Segment& rhs);
 
